@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>MindAR High-Fidelity Video</title>
+
+  <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
+
+  <script src="./js/shaders.js"></script>
+  <script src="./js/ar-logic.js"></script>
+
+  <style>
+    /* Absolute suppression of any MindAR injected UI elements */
+   .mindar-ui-overlay,.mindar-ui-loading,.mindar-ui-scanning {
+      display: none!important;
+    }
+    
+    body {
+      margin: 0;
+      overflow: hidden; /* Prevent scrollbars */
+    }
+  </style>
+</head>
+
+<body>
+  <a-scene 
+    mindar-image="imageTargetSrc:./assets/targets.mind; 
+                  uiLoading: no; uiScanning: no; uiError: no; 
+                  filterMinCF: 0.0001; filterBeta: 0.001; 
+                  missTolerance: 10" 
+    color-space="sRGB" 
+    renderer="colorManagement: true, physicallyCorrectLights" 
+    vr-mode-ui="enabled: false" 
+    device-orientation-permission-ui="enabled: false">
+
+    <a-assets>
+      <video id="ar-video" src="./assets/asset.mp4" 
+             preload="auto" response-type="arraybuffer" loop 
+             crossorigin="anonymous" webkit-playsinline playsinline muted>
+      </video>
+    </a-assets>
+
+    <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+
+    <a-entity id="ar-target" mindar-image-target="targetIndex: 0" ar-controller>
+      
+      <a-entity id="video-display"
+        geometry="primitive: plane; width: 1; height: 0.312"
+        material="shader: chromakey; src: #ar-video; color: 0.0 1.0 0.0; opacity: 0"
+        position="0 0 0"
+        rotation="0 0 0">
+      </a-entity>
+      
+    </a-entity>
+  </a-scene>
+</body>
+</html>
