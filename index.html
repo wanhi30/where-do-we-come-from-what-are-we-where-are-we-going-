@@ -1,62 +1,95 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Where do we come from AR</title>
-
-  <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
-
-  <script src="./js/shaders.js"></script>
-  <script src="./js/ar-logic.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Wanhii WebAR</title>
+  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+  
+  <script src="./js/chromakey-shader.js"></script>
+  <script src="./js/smooth-follow.js"></script>
+  <script src="./js/video-controller.js"></script>
 
   <style>
-    /* Absolute suppression of any MindAR injected UI elements */
-   .mindar-ui-overlay,.mindar-ui-loading,.mindar-ui-scanning {
-      display: none!important;
+    /* UI Overlay for the "Start" button (Required for iOS Audio) */
+    #overlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.8); z-index: 999;
+      display: flex; justify-content: center; align-items: center;
     }
-    
-    body {
-      margin: 0;
-      overflow: hidden; /* Prevent scrollbars */
+    #start-btn {
+      padding: 15px 30px; font-size: 20px; color: white;
+      background: #ff0055; border: none; border-radius: 5px;
+      cursor: pointer;
     }
+    /* Hide the 'VR' button that A-Frame adds by default */
+   .a-enter-vr { display: none; }
   </style>
 </head>
-
 <body>
+
+  <div id="overlay">
+    <button id="start-btn">Enter AR Experience</button>
+  </div>
+
   <a-scene 
-    mindar-image="imageTargetSrc:./assets/targets.mind; 
-                  uiLoading: no; uiScanning: no; uiError: no; 
-                  filterMinCF: 0.0001; filterBeta: 0.001; 
-                  missTolerance: 10" 
+    mindar-image="
+      imageTargetSrc:./assets/targets.mind; 
+      filterMinCF: 0.0001; 
+      filterBeta: 0.01; 
+      warmupTolerance: 10; 
+      missTolerance: 10;
+      uiScanning: no" 
     color-space="sRGB" 
     renderer="colorManagement: true, physicallyCorrectLights" 
     vr-mode-ui="enabled: false" 
     device-orientation-permission-ui="enabled: false">
 
     <a-assets>
-      <video id="ar-video" src="./assets/asset.mp4" 
-             preload="auto" response-type="arraybuffer" loop 
-             crossorigin="anonymous" webkit-playsinline playsinline muted>
+      <video id="ar-video" 
+             src="./assets/your-video.mp4" 
+             preload="auto" 
+             loop 
+             crossorigin="anonymous" 
+             playsinline 
+             webkit-playsinline>
       </video>
     </a-assets>
 
     <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-    <a-entity id="ar-target" mindar-image-target="targetIndex: 0" ar-controller>
+    <a-entity id="ghost-anchor" mindar-image-target="targetIndex: 0" visible="false"></a-entity>
+
+    <a-entity 
+      smooth-follow="target: #ghost-anchor; damping: 0.05; rotDamping: 0.05"
+      video-controller="target: #ghost-anchor; video: #ar-video">
       
-      <a-entity id="video-display"
-        geometry="primitive: plane; width: 1; height: 0.3522"
-        material="shader: chromakey; src: #ar-video; color: 19, 255, 7, 1; opacity: 0"
-        position="0 0 0"
-        rotation="0 0 0">
+      <a-entity 
+        id="video-plane"
+        geometry="primitive: plane; width: 1; height: 0.352" 
+        material="shader: chromakey; src: #ar-video; color: 0.075 1.0 0.027; threshold: 0.15; smoothness: 0.08"
+        position="0 0 0">
       </a-entity>
       
     </a-entity>
+
   </a-scene>
+
+  <script>
+    // iOS Unlock Logic
+    const startBtn = document.querySelector('#start-btn');
+    const overlay = document.querySelector('#overlay');
+    const video = document.querySelector('#ar-video');
+
+    startBtn.addEventListener('click', () => {
+      // 1. Hide overlay
+      overlay.style.display = 'none';
+      // 2. Play/Pause video instantly to unlock audio engine
+      video.play().then(() => {
+        video.pause();
+        video.currentTime = 0;
+      }).catch(e => console.error("Video unlock failed", e));
+    });
+  </script>
 </body>
-
 </html>
-
-
